@@ -1,4 +1,5 @@
-import json
+import csv
+from book import Book
 
 class BookCollection:
     def __init__(self):
@@ -18,16 +19,23 @@ class BookCollection:
         return sum(book.pages for book in self.books if book.completed)
 
     def load_books(self, filename):
-        """Load books from a JSON file."""
-        with open(filename, 'r') as file:
-            books_data = json.load(file)
-            self.books = [Book(**data) for data in books_data]
+        """Load books from a CSV file."""
+        try:
+            with open(filename, 'r') as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    title, author, pages, is_completed = row
+                    book = Book(title, author, int(pages), is_completed == 'c')
+                    self.add_book(book)
+        except FileNotFoundError:
+            print(f"Warning: {filename} not found. Starting with an empty list.")
 
     def save_books(self, filename):
-        """Save books to a JSON file."""
-        with open(filename, 'w') as file:
-            books_data = [book.__dict__ for book in self.books]
-            json.dump(books_data, file)
+        """Save books to a CSV file."""
+        with open(filename, 'w', newline='') as file:
+            writer = csv.writer(file)
+            for book in self.books:
+                writer.writerow([book.title, book.author, book.pages, 'c' if book.completed else 'r'])
 
     def sort_books(self, key):
         """Sort books by the specified key and then by title."""
